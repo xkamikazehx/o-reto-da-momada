@@ -310,17 +310,11 @@
 
     .nota {
       text-align: center;
-      color: #8797ad;
-      font-size: 12px;
-      margin-top: 20px;
-      line-height: 1.5;
-    }
-
-    .nota strong {
       color: #65b5ff;
       font-size: 14px;
-      display: block;
-      margin-top: 8px;
+      font-weight: bold;
+      margin-top: 20px;
+      line-height: 1.5;
     }
 
     .separador {
@@ -467,8 +461,7 @@
 
     <!-- TEXTO INFERIOR -->
     <div class="nota">
-      O RETO DA MOMADA · ENTROIDO DE AGUASANTAS
-      <strong>SE EL/LA MÁS RÁPID@ Y LLEVATE UN PREMIO</strong>
+      SE EL/LA MÁS RÁPID@ Y LLEVATE UN PREMIO
     </div>
 
   </div>
@@ -713,7 +706,7 @@
     }, 1000);
   }
 
-  // CARGAR PREGUNTA
+  // CARGAR PREGUNTA Y MEZCLAR RESPUESTAS ALEATORIAMENTE
   function cargarPregunta() {
     respostaSeleccionada = false;
 
@@ -738,39 +731,58 @@
 
     const opciones = idioma === "gl" ? p.opcionesGl : p.opcionesEs;
 
-    opciones.forEach((opcion, indice) => {
+    // Asociar cada respuesta con su condición de correcta
+    const respuestasMezcladas = opciones.map((texto, indice) => ({
+      texto: texto,
+      esCorrecta: indice === p.correcta
+    }));
+
+    // Barajar las respuestas con Fisher-Yates
+    for (let i = respuestasMezcladas.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+
+      [respuestasMezcladas[i], respuestasMezcladas[j]] =
+        [respuestasMezcladas[j], respuestasMezcladas[i]];
+    }
+
+    // Mostrar las opciones ya mezcladas
+    respuestasMezcladas.forEach((respuesta, indice) => {
       const boton = document.createElement("button");
 
       boton.className = "resposta";
-      boton.textContent = String.fromCharCode(65 + indice) + ". " + opcion;
+      boton.textContent =
+        String.fromCharCode(65 + indice) + ". " + respuesta.texto;
 
-      boton.onclick = () => responder(indice, boton);
+      boton.dataset.correcta = respuesta.esCorrecta ? "true" : "false";
+
+      boton.onclick = () => responder(boton);
 
       lista.appendChild(boton);
     });
   }
 
   // RESPONDER Y PASAR AUTOMÁTICAMENTE A LA SIGUIENTE
-  function responder(indice, botonElixido) {
+  function responder(botonElixido) {
     if (respostaSeleccionada) return;
 
     respostaSeleccionada = true;
 
-    const p = preguntas[preguntaActual];
     const t = textos[idioma];
     const botones = document.querySelectorAll(".resposta");
 
-    botones.forEach((boton, i) => {
+    const esCorrecta = botonElixido.dataset.correcta === "true";
+
+    botones.forEach(boton => {
       boton.disabled = true;
 
-      if (i === p.correcta) {
+      if (boton.dataset.correcta === "true") {
         boton.classList.add("correcta");
       }
     });
 
     const mensaxe = document.getElementById("mensaxeResposta");
 
-    if (indice === p.correcta) {
+    if (esCorrecta) {
       aciertos++;
 
       document.getElementById("contadorAciertos").textContent = aciertos;
@@ -788,7 +800,6 @@
     document.getElementById("barraProgreso").style.width =
       ((preguntaActual + 1) / preguntas.length * 100) + "%";
 
-    // ESPERAR 0,9 SEGUNDOS Y AVANZAR AUTOMÁTICAMENTE
     setTimeout(() => {
       seguintePregunta();
     }, 900);
