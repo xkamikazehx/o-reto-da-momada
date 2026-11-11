@@ -1,0 +1,860 @@
+
+<!DOCTYPE html>
+<html lang="gl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>O Reto da Momada</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    :root {
+      --azul: #1769aa;
+      --azul-escuro: #104d80;
+      --fondo: #101522;
+      --panel: #1b2435;
+      --texto: #f5f7fb;
+      --suave: #b8c3d4;
+      --borde: #344158;
+      --ouro: #f5c542;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: 24px 14px;
+      background:
+        radial-gradient(circle at top, #253653 0%, var(--fondo) 55%);
+      color: var(--texto);
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin: 15px 0 25px;
+    }
+
+    .subtitulo {
+      color: #9dbce0;
+      font-size: 13px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      font-size: clamp(30px, 7vw, 48px);
+      line-height: 1.05;
+      margin: 0;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .acento { color: #65b5ff; }
+
+    .panel {
+      background: rgba(27, 36, 53, .96);
+      border: 1px solid var(--borde);
+      border-radius: 20px;
+      padding: 25px;
+      box-shadow: 0 16px 45px rgba(0,0,0,.25);
+    }
+
+    .pantalla { display: none; }
+    .pantalla.activa { display: block; }
+
+    h2 {
+      margin-top: 0;
+      font-size: 25px;
+    }
+
+    p {
+      color: var(--suave);
+      line-height: 1.55;
+    }
+
+    .idiomas {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 25px;
+    }
+
+    button {
+      font: inherit;
+      cursor: pointer;
+      border: 0;
+      border-radius: 12px;
+      padding: 15px 17px;
+      font-weight: bold;
+      transition: .15s ease;
+    }
+
+    button:active { transform: scale(.98); }
+
+    .idioma-azul {
+      background: var(--azul);
+      color: white;
+    }
+
+    .idioma-branco {
+      background: white;
+      color: var(--azul);
+      border: 2px solid var(--azul);
+    }
+
+    .botao-principal {
+      width: 100%;
+      background: var(--azul);
+      color: white;
+      margin-top: 15px;
+    }
+
+    .botao-principal:hover,
+    .idioma-azul:hover {
+      background: var(--azul-escuro);
+    }
+
+    .botao-secundario {
+      width: 100%;
+      background: white;
+      color: var(--azul);
+      margin-top: 10px;
+    }
+
+    input {
+      width: 100%;
+      background: #101827;
+      color: white;
+      border: 1px solid #52617a;
+      border-radius: 10px;
+      padding: 15px;
+      font-size: 16px;
+      margin-top: 8px;
+      outline: none;
+    }
+
+    input:focus { border-color: #65b5ff; }
+
+    label {
+      display: block;
+      color: var(--suave);
+      margin-top: 20px;
+      font-size: 14px;
+    }
+
+    .info {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+
+    .info-caixa {
+      flex: 1;
+      min-width: 100px;
+      background: #111b2b;
+      border: 1px solid var(--borde);
+      border-radius: 12px;
+      padding: 12px;
+      text-align: center;
+    }
+
+    .info-caixa small {
+      display: block;
+      color: var(--suave);
+      font-size: 12px;
+      margin-bottom: 5px;
+    }
+
+    .info-caixa strong {
+      font-size: 20px;
+    }
+
+    .barra-fondo {
+      width: 100%;
+      height: 8px;
+      background: #101827;
+      border-radius: 20px;
+      overflow: hidden;
+      margin: 12px 0 24px;
+    }
+
+    .barra {
+      width: 0%;
+      height: 100%;
+      background: #55aaff;
+      transition: width .25s;
+    }
+
+    .pregunta-numero {
+      color: #75baff;
+      font-size: 13px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    #textoPregunta {
+      font-size: 22px;
+      line-height: 1.35;
+      margin: 12px 0 22px;
+    }
+
+    .respostas {
+      display: grid;
+      gap: 11px;
+    }
+
+    .resposta {
+      width: 100%;
+      text-align: left;
+      background: #253248;
+      color: white;
+      border: 1px solid #40516c;
+      padding: 16px;
+      line-height: 1.4;
+    }
+
+    .resposta:hover:not(:disabled) {
+      background: #304563;
+      border-color: #75baff;
+    }
+
+    .resposta:disabled { cursor: default; opacity: 1; }
+
+    .resposta.correcta {
+      background: #155b43;
+      border-color: #35c58a;
+    }
+
+    .resposta.incorrecta {
+      background: #702d3b;
+      border-color: #ed7184;
+    }
+
+    #mensaxeResposta {
+      min-height: 25px;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+
+    .ranking-lista {
+      margin-top: 20px;
+      display: grid;
+      gap: 9px;
+    }
+
+    .ranking-item {
+      display: grid;
+      grid-template-columns: 42px 1fr auto;
+      align-items: center;
+      gap: 10px;
+      padding: 13px;
+      border-radius: 12px;
+      background: #111b2b;
+      border: 1px solid var(--borde);
+    }
+
+    .ranking-item.top1 {
+      border-color: #d7aa32;
+      background: rgba(245,197,66,.12);
+    }
+
+    .ranking-item.top2 {
+      border-color: #b8c3d4;
+      background: rgba(184,195,212,.10);
+    }
+
+    .ranking-item.top3 {
+      border-color: #bd8055;
+      background: rgba(189,128,85,.10);
+    }
+
+    .medalla {
+      font-size: 25px;
+      text-align: center;
+    }
+
+    .nome-ranking {
+      font-weight: bold;
+      overflow-wrap: anywhere;
+    }
+
+    .detalle-ranking {
+      color: var(--suave);
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    .puntuacion {
+      text-align: right;
+      font-weight: bold;
+      white-space: nowrap;
+    }
+
+    .mensaxe-vacia {
+      text-align: center;
+      padding: 20px;
+      color: var(--suave);
+    }
+
+    .nota {
+      text-align: center;
+      color: #8797ad;
+      font-size: 12px;
+      margin-top: 20px;
+    }
+
+    .separador {
+      height: 1px;
+      background: var(--borde);
+      margin: 22px 0;
+    }
+
+    .centrado { text-align: center; }
+
+    @media (max-width: 480px) {
+      body { padding: 12px 10px; }
+      .panel { padding: 19px; }
+      .ranking-item { grid-template-columns: 34px 1fr auto; }
+      #textoPregunta { font-size: 20px; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <header>
+      <div class="subtitulo" id="subtitulo">Entroido de Aguasantas</div>
+      <h1>O RETO <span class="acento">DA MOMADA</span></h1>
+    </header>
+
+    <!-- ESCOLLA DE IDIOMA -->
+    <section id="pantallaIdioma" class="pantalla activa">
+      <div class="panel centrado">
+        <h2>Escolle o teu idioma</h2>
+        <p>Elixe o idioma no que queres participar.</p>
+        <div class="idiomas">
+          <button class="idioma-azul" onclick="escollerIdioma('gl')">
+            GALEGO
+          </button>
+          <button class="idioma-branco" onclick="escollerIdioma('es')">
+            CASTELLANO
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- BENVIDA -->
+    <section id="pantallaBenvida" class="pantalla">
+      <div class="panel">
+        <h2 id="tituloBenvida"></h2>
+        <p id="textoBenvida"></p>
+
+        <label id="etiquetaNome" for="nomeParticipante"></label>
+        <input id="nomeParticipante" maxlength="30" autocomplete="nickname">
+
+        <button class="botao-principal" id="botonComezar" onclick="comezarConcurso()"></button>
+        <button class="botao-secundario" id="botonVolverIdioma" onclick="mostrarPantalla('pantallaIdioma')"></button>
+      </div>
+    </section>
+
+    <!-- CONCURSO -->
+    <section id="pantallaConcurso" class="pantalla">
+      <div class="panel">
+        <div class="info">
+          <div class="info-caixa">
+            <small id="etiquetaTempo"></small>
+            <strong id="cronometro">00:00</strong>
+          </div>
+          <div class="info-caixa">
+            <small id="etiquetaAciertos"></small>
+            <strong id="contadorAciertos">0</strong>
+          </div>
+          <div class="info-caixa">
+            <small id="etiquetaPregunta"></small>
+            <strong id="contadorPregunta">1/10</strong>
+          </div>
+        </div>
+
+        <div class="barra-fondo">
+          <div class="barra" id="barraProgreso"></div>
+        </div>
+
+        <div class="pregunta-numero" id="numeroPregunta"></div>
+        <h2 id="textoPregunta"></h2>
+
+        <div class="respostas" id="listaRespostas"></div>
+        <div id="mensaxeResposta"></div>
+
+        <button class="botao-principal" id="botonSeguinte"
+          onclick="seguintePregunta()" style="display:none"></button>
+      </div>
+    </section>
+
+    <!-- RESULTADO -->
+    <section id="pantallaResultado" class="pantalla">
+      <div class="panel centrado">
+        <h2 id="tituloResultado"></h2>
+        <p id="textoResultado"></p>
+        <div class="separador"></div>
+        <div class="info">
+          <div class="info-caixa">
+            <small id="etiquetaResultadoAciertos"></small>
+            <strong id="resultadoAciertos">0/10</strong>
+          </div>
+          <div class="info-caixa">
+            <small id="etiquetaResultadoTempo"></small>
+            <strong id="resultadoTempo">00:00</strong>
+          </div>
+        </div>
+        <p id="estadoGardado"></p>
+        <button class="botao-principal" id="botonVerRanking" onclick="verRanking()"></button>
+        <button class="botao-secundario" id="botonXogarOutraVez" onclick="xogarOutraVez()"></button>
+      </div>
+    </section>
+
+    <!-- CLASIFICACION -->
+    <section id="pantallaRanking" class="pantalla">
+      <div class="panel">
+        <h2 class="centrado" id="tituloRanking"></h2>
+        <p class="centrado" id="textoRanking"></p>
+        <div id="rankingLista" class="ranking-lista">
+          <div class="mensaxe-vacia">...</div>
+        </div>
+        <button class="botao-principal" id="botonActualizar" onclick="cargarRanking()"></button>
+        <button class="botao-secundario" id="botonVolver" onclick="mostrarPantalla('pantallaIdioma')"></button>
+      </div>
+    </section>
+
+    <div class="nota">O RETO DA MOMADA · ENTROIDO DE AGUASANTAS</div>
+  </div>
+
+<script>
+  // CONEXIÓN CON SUPABASE
+  const SUPABASE_URL = "https://aiqrnpceuwumzqlyofud.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_QOWjpRXzHRcYV3K6t8QEBA_B8TPgXGV";
+
+  const supabaseClient = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
+
+  let idioma = "gl";
+  let participante = "";
+  let preguntaActual = 0;
+  let aciertos = 0;
+  let segundos = 0;
+  let intervalo = null;
+  let respostaSeleccionada = false;
+
+  const textos = {
+    gl: {
+      benvida: "Benvido/a ao Reto da Momada!",
+      explicacion: "Pon a proba os teus coñecementos sobre o Entroido de Aguasantas. Tes 10 preguntas e catro posibles respostas. Responde o mellor posible e intenta conseguir un posto no podio!",
+      nome: "O teu nome ou alcume",
+      placeholder: "Escribe aquí o teu nome...",
+      comezar: "COMEZAR O RETO",
+      cambiar: "Cambiar idioma",
+      tempo: "TEMPO",
+      acertos: "ACIERTOS",
+      pregunta: "PREGUNTA",
+      seguinte: "SEGUINTE PREGUNTA",
+      correcta: "Resposta correcta!",
+      incorrecta: "Resposta incorrecta.",
+      resultado: "Reto completado!",
+      resultadoTexto: "Este é o teu resultado. Xa podes consultar a clasificación xeral.",
+      resultadoAciertos: "ACIERTOS",
+      resultadoTempo: "TEMPO TOTAL",
+      gardando: "Gardando o teu resultado...",
+      gardado: "O teu resultado foi gardado na clasificación.",
+      erroGardado: "Non se puido gardar o resultado. Comproba a conexión e inténtao de novo.",
+      verRanking: "VER CLASIFICACIÓN",
+      outraVez: "XOGAR OUTRA VEZ",
+      ranking: "CLASIFICACIÓN XERAL",
+      rankingTexto: "Os participantes con máis acertos ocupan os primeiros postos. En caso de empate, gaña quen empregase menos tempo.",
+      actualizar: "ACTUALIZAR CLASIFICACIÓN",
+      volver: "VOLVER AO INICIO",
+      baleiro: "Aínda non hai participantes. Sé o primeiro!",
+      puntos: "acertos",
+      segundos: "segundos",
+      erroNome: "Escribe o teu nome ou alcume para comezar.",
+      erroConexion: "Non se puido conectar coa clasificación. Inténtao de novo.",
+      preguntaNumero: "PREGUNTA"
+    },
+    es: {
+      benvida: "¡Bienvenido/a al Reto da Momada!",
+      explicacion: "Pon a prueba tus conocimientos sobre el Entroido de Aguasantas. Tienes 10 preguntas y cuatro posibles respuestas. ¡Responde lo mejor posible e intenta conseguir un puesto en el podio!",
+      nome: "Tu nombre o apodo",
+      placeholder: "Escribe aquí tu nombre...",
+      comezar: "COMENZAR EL RETO",
+      cambiar: "Cambiar idioma",
+      tempo: "TIEMPO",
+      acertos: "ACIERTOS",
+      pregunta: "PREGUNTA",
+      seguinte: "SIGUIENTE PREGUNTA",
+      correcta: "¡Respuesta correcta!",
+      incorrecta: "Respuesta incorrecta.",
+      resultado: "¡Reto completado!",
+      resultadoTexto: "Este es tu resultado. Ya puedes consultar la clasificación general.",
+      resultadoAciertos: "ACIERTOS",
+      resultadoTempo: "TIEMPO TOTAL",
+      gardando: "Guardando tu resultado...",
+      gardado: "Tu resultado se ha guardado en la clasificación.",
+      erroGardado: "No se ha podido guardar el resultado. Comprueba la conexión e inténtalo de nuevo.",
+      verRanking: "VER CLASIFICACIÓN",
+      outraVez: "JUGAR OTRA VEZ",
+      ranking: "CLASIFICACIÓN GENERAL",
+      rankingTexto: "Los participantes con más aciertos ocupan los primeros puestos. En caso de empate, gana quien haya empleado menos tiempo.",
+      actualizar: "ACTUALIZAR CLASIFICACIÓN",
+      volver: "VOLVER AL INICIO",
+      baleiro: "Todavía no hay participantes. ¡Sé el primero!",
+      puntos: "aciertos",
+      segundos: "segundos",
+      erroNome: "Escribe tu nombre o apodo para comenzar.",
+      erroConexion: "No se ha podido conectar con la clasificación. Inténtalo de nuevo.",
+      preguntaNumero: "PREGUNTA"
+    }
+  };
+
+  // PREGUNTAS. A orde das opcións é a mesma nos dous idiomas.
+  const preguntas = [
+    {
+      gl: "Que instrumento utilizaban tradicionalmente os lanceiros para anunciar a súa chegada?",
+      es: "¿Qué instrumento utilizaban tradicionalmente los lanceiros para anunciar su llegada?",
+      opcionesGl: ["Unha trompeta", "Unha gaita", "Un corno", "Un tambor"],
+      opcionesEs: ["Una trompeta", "Una gaita", "Un cuerno", "Un tambor"],
+      correcta: 2
+    },
+    {
+      gl: "Durante canto tempo estivo sen celebrarse o Entroido tradicional de Aguasantas antes da súa recuperación?",
+      es: "¿Durante cuánto tiempo estuvo sin celebrarse el Entroido tradicional de Aguasantas antes de su recuperación?",
+      opcionesGl: ["Máis de 10 anos", "Máis de 30 anos", "Máis de 60 anos", "Máis de 100 anos"],
+      opcionesEs: ["Más de 10 años", "Más de 30 años", "Más de 60 años", "Más de 100 años"],
+      correcta: 2
+    },
+    {
+      gl: "Que flor levan os cabalos dos lanceiros como adorno característico?",
+      es: "¿Qué flor llevan los caballos de los lanceiros como adorno característico?",
+      opcionesGl: ["Camelias", "Mimosas", "Rosas", "Caraveis"],
+      opcionesEs: ["Camelias", "Mimosas", "Rosas", "Claveles"],
+      correcta: 1
+    },
+    {
+      gl: "Cal era unha das funcións principais dos lanceiros durante o percorrido pola parroquia?",
+      es: "¿Cuál era una de las funciones principales de los lanceiros durante el recorrido por la parroquia?",
+      opcionesGl: ["Anunciar a chegada da comitiva e abrir paso", "Organizar as comidas", "Tocar durante os bailes", "Entregar os premios do Entroido"],
+      opcionesEs: ["Anunciar la llegada de la comitiva y abrir paso", "Organizar las comidas", "Tocar durante los bailes", "Entregar los premios del Entroido"],
+      correcta: 0
+    },
+    {
+      gl: "Que aspecto destacaba especialmente nos madamitos dentro da comitiva?",
+      es: "¿Qué aspecto destacaba especialmente en los madamitos dentro de la comitiva?",
+      opcionesGl: ["A súa danza e presenza", "O coidado dos animais", "A interpretación musical", "A lectura do Sermón"],
+      opcionesEs: ["Su danza y presencia", "El cuidado de los animales", "La interpretación musical", "La lectura del Sermón"],
+      correcta: 0
+    },
+    {
+      gl: "Que representan as muradanas dentro da tradición da Momada?",
+      es: "¿Qué representan las muradanas dentro de la tradición de la Momada?",
+      opcionesGl: ["Personaxes femininos da comitiva", "Instrumentos musicais", "Máscaras feitas de madeira", "Unha comida tradicional"],
+      opcionesEs: ["Personajes femeninos de la comitiva", "Instrumentos musicales", "Máscaras hechas de madera", "Una comida tradicional"],
+      correcta: 0
+    },
+    {
+      gl: "Que elemento sonoro caracteriza especialmente a presenza dos vellos?",
+      es: "¿Qué elemento sonoro caracteriza especialmente la presencia de los vellos?",
+      opcionesGl: ["As chocas", "As campás da igrexa", "As frautas", "Os tambores"],
+      opcionesEs: ["Los cencerros", "Las campanas de la iglesia", "Las flautas", "Los tambores"],
+      correcta: 0
+    },
+    {
+      gl: "Que caracteriza a vestimenta tradicional das vellas?",
+      es: "¿Qué caracteriza la vestimenta tradicional de las vellas?",
+      opcionesGl: ["Roupa branca adornada con cintas e lazos", "Un uniforme militar", "Unha capa negra sen adornos", "Un traxe de mariñeiro"],
+      opcionesEs: ["Ropa blanca adornada con cintas y lazos", "Un uniforme militar", "Una capa negra sin adornos", "Un traje de marinero"],
+      correcta: 0
+    },
+    {
+      gl: "Que sucede tradicionalmente na Corrida do Galo?",
+      es: "¿Qué sucede tradicionalmente en la Corrida do Galo?",
+      opcionesGl: ["Realízase unha carreira de cabalos", "A comitiva percorre as aldeas cantando", "Ten lugar unha celebración arredor do galo e dunha comida compartida", "Elíxese o mellor disfrace"],
+      opcionesEs: ["Se realiza una carrera de caballos", "La comitiva recorre las aldeas cantando", "Tiene lugar una celebración alrededor del gallo y de una comida compartida", "Se elige el mejor disfraz"],
+      correcta: 2
+    },
+    {
+      gl: "Que actividade relacionada co galo foi recuperada en 2025?",
+      es: "¿Qué actividad relacionada con el gallo fue recuperada en 2025?",
+      opcionesGl: ["A Corrida do Galo infantil", "O desfile dos madamitos", "A danza dos lanceiros", "O concurso de máscaras"],
+      opcionesEs: ["La Corrida do Galo infantil", "El desfile de los madamitos", "La danza de los lanceiros", "El concurso de máscaras"],
+      correcta: 0
+    }
+  ];
+
+  function escollerIdioma(valor) {
+    idioma = valor;
+    actualizarTextos();
+    mostrarPantalla("pantallaBenvida");
+  }
+
+  function actualizarTextos() {
+    const t = textos[idioma];
+    document.getElementById("tituloBenvida").textContent = t.benvida;
+    document.getElementById("textoBenvida").textContent = t.explicacion;
+    document.getElementById("etiquetaNome").textContent = t.nome;
+    document.getElementById("nomeParticipante").placeholder = t.placeholder;
+    document.getElementById("botonComezar").textContent = t.comezar;
+    document.getElementById("botonVolverIdioma").textContent = t.cambiar;
+    document.getElementById("etiquetaTempo").textContent = t.tempo;
+    document.getElementById("etiquetaAciertos").textContent = t.acertos;
+    document.getElementById("etiquetaPregunta").textContent = t.pregunta;
+    document.getElementById("botonSeguinte").textContent = t.seguinte;
+    document.getElementById("etiquetaResultadoAciertos").textContent = t.resultadoAciertos;
+    document.getElementById("etiquetaResultadoTempo").textContent = t.resultadoTempo;
+    document.getElementById("botonVerRanking").textContent = t.verRanking;
+    document.getElementById("botonXogarOutraVez").textContent = t.outraVez;
+    document.getElementById("tituloRanking").textContent = t.ranking;
+    document.getElementById("textoRanking").textContent = t.rankingTexto;
+    document.getElementById("botonActualizar").textContent = t.actualizar;
+    document.getElementById("botonVolver").textContent = t.volver;
+  }
+
+  function mostrarPantalla(id) {
+    document.querySelectorAll(".pantalla").forEach(p => p.classList.remove("activa"));
+    document.getElementById(id).classList.add("activa");
+  }
+
+  function formatarTempo(valor) {
+    const minutos = Math.floor(valor / 60);
+    const segundosRestantes = valor % 60;
+    return String(minutos).padStart(2, "0") + ":" +
+      String(segundosRestantes).padStart(2, "0");
+  }
+
+  function comezarConcurso() {
+    const nome = document.getElementById("nomeParticipante").value.trim();
+
+    if (!nome) {
+      alert(textos[idioma].erroNome);
+      return;
+    }
+
+    participante = nome;
+    preguntaActual = 0;
+    aciertos = 0;
+    segundos = 0;
+
+    clearInterval(intervalo);
+    document.getElementById("contadorAciertos").textContent = "0";
+    document.getElementById("cronometro").textContent = "00:00";
+
+    mostrarPantalla("pantallaConcurso");
+    cargarPregunta();
+
+    intervalo = setInterval(() => {
+      segundos++;
+      document.getElementById("cronometro").textContent = formatarTempo(segundos);
+    }, 1000);
+  }
+
+  function cargarPregunta() {
+    respostaSeleccionada = false;
+    const p = preguntas[preguntaActual];
+    const t = textos[idioma];
+
+    document.getElementById("contadorPregunta").textContent =
+      (preguntaActual + 1) + "/10";
+    document.getElementById("numeroPregunta").textContent =
+      t.preguntaNumero + " " + (preguntaActual + 1);
+    document.getElementById("textoPregunta").textContent = p[idioma];
+
+    document.getElementById("barraProgreso").style.width =
+      ((preguntaActual) / preguntas.length * 100) + "%";
+
+    document.getElementById("mensaxeResposta").textContent = "";
+    document.getElementById("botonSeguinte").style.display = "none";
+
+    const lista = document.getElementById("listaRespostas");
+    lista.innerHTML = "";
+
+    const opciones = idioma === "gl" ? p.opcionesGl : p.opcionesEs;
+
+    opciones.forEach((opcion, indice) => {
+      const boton = document.createElement("button");
+      boton.className = "resposta";
+      boton.textContent = String.fromCharCode(65 + indice) + ". " + opcion;
+      boton.onclick = () => responder(indice, boton);
+      lista.appendChild(boton);
+    });
+  }
+
+  function responder(indice, botonElixido) {
+    if (respostaSeleccionada) return;
+
+    respostaSeleccionada = true;
+    const p = preguntas[preguntaActual];
+    const t = textos[idioma];
+    const botones = document.querySelectorAll(".resposta");
+
+    botones.forEach((boton, i) => {
+      boton.disabled = true;
+      if (i === p.correcta) boton.classList.add("correcta");
+    });
+
+    const mensaxe = document.getElementById("mensaxeResposta");
+
+    if (indice === p.correcta) {
+      aciertos++;
+      document.getElementById("contadorAciertos").textContent = aciertos;
+      mensaxe.textContent = "✓ " + t.correcta;
+      mensaxe.style.color = "#55d6a5";
+    } else {
+      botonElixido.classList.add("incorrecta");
+      mensaxe.textContent = "✕ " + t.incorrecta;
+      mensaxe.style.color = "#ff8b9b";
+    }
+
+    document.getElementById("barraProgreso").style.width =
+      ((preguntaActual + 1) / preguntas.length * 100) + "%";
+
+    const botonSeguinte = document.getElementById("botonSeguinte");
+    botonSeguinte.style.display = "block";
+
+    if (preguntaActual === preguntas.length - 1) {
+      botonSeguinte.textContent = idioma === "gl" ? "VER RESULTADO" : "VER RESULTADO";
+    }
+  }
+
+  function seguintePregunta() {
+    preguntaActual++;
+
+    if (preguntaActual >= preguntas.length) {
+      rematarConcurso();
+      return;
+    }
+
+    cargarPregunta();
+  }
+
+  async function rematarConcurso() {
+    clearInterval(intervalo);
+    mostrarPantalla("pantallaResultado");
+
+    const t = textos[idioma];
+    document.getElementById("tituloResultado").textContent = t.resultado;
+    document.getElementById("textoResultado").textContent = t.resultadoTexto;
+    document.getElementById("resultadoAciertos").textContent = aciertos + "/10";
+    document.getElementById("resultadoTempo").textContent = formatarTempo(segundos);
+    document.getElementById("estadoGardado").textContent = t.gardando;
+
+    const { error } = await supabaseClient
+      .from("participantes")
+      .insert([{
+        nombre: participante,
+        aciertos: aciertos,
+        tiempo_segundos: segundos
+      }]);
+
+    if (error) {
+      console.error("Erro ao gardar:", error);
+      document.getElementById("estadoGardado").textContent = t.erroGardado;
+    } else {
+      document.getElementById("estadoGardado").textContent = t.gardado;
+    }
+  }
+
+  async function verRanking() {
+    mostrarPantalla("pantallaRanking");
+    await cargarRanking();
+  }
+
+  function escaparHTML(valor) {
+    return String(valor).replace(/[&<>"']/g, caracter => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#039;"
+    })[caracter]);
+  }
+
+  async function cargarRanking() {
+    const lista = document.getElementById("rankingLista");
+    const t = textos[idioma];
+
+    lista.innerHTML = '<div class="mensaxe-vacia">...</div>';
+
+    const { data, error } = await supabaseClient
+      .from("participantes")
+      .select("nombre, aciertos, tiempo_segundos, fecha")
+      .order("aciertos", { ascending: false })
+      .order("tiempo_segundos", { ascending: true })
+      .order("fecha", { ascending: true })
+      .limit(100);
+
+    if (error) {
+      console.error("Erro ao cargar ranking:", error);
+      lista.innerHTML = '<div class="mensaxe-vacia">' +
+        escaparHTML(t.erroConexion) + '</div>';
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      lista.innerHTML = '<div class="mensaxe-vacia">' +
+        escaparHTML(t.baleiro) + '</div>';
+      return;
+    }
+
+    lista.innerHTML = data.map((persoa, indice) => {
+      let medalla = String(indice + 1);
+      let clase = "";
+
+      if (indice === 0) {
+        medalla = "🥇";
+        clase = "top1";
+      } else if (indice === 1) {
+        medalla = "🥈";
+        clase = "top2";
+      } else if (indice === 2) {
+        medalla = "🥉";
+        clase = "top3";
+      }
+
+      return `
+        <div class="ranking-item ${clase}">
+          <div class="medalla">${medalla}</div>
+          <div>
+            <div class="nome-ranking">${escaparHTML(persoa.nombre)}</div>
+            <div class="detalle-ranking">
+              ${persoa.aciertos} ${escaparHTML(t.puntos)}
+            </div>
+          </div>
+          <div class="puntuacion">
+            ${formatarTempo(persoa.tiempo_segundos)}
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  function xogarOutraVez() {
+    document.getElementById("nomeParticipante").value = participante;
+    mostrarPantalla("pantallaBenvida");
+  }
+
+  // Textos iniciais
+  actualizarTextos();
+</script>
+</body>
+</html>
