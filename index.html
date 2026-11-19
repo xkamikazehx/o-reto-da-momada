@@ -5,6 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>O Reto da Momada</title>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
@@ -16,7 +17,9 @@
   --suave:#b8c3d4;
   --borde:#344158;
 }
+
 *{box-sizing:border-box}
+
 body{
   margin:0;
   min-height:100vh;
@@ -29,25 +32,73 @@ body{
   color:var(--texto);
   font-family:Arial,Helvetica,sans-serif;
 }
+
 .container{width:100%;max-width:680px;margin:0 auto}
 header{text-align:center;margin:15px 0 25px}
 .subtitulo{color:#9dbce0;font-size:13px;letter-spacing:3px;text-transform:uppercase;margin-bottom:10px}
 h1{font-size:clamp(30px,7vw,48px);line-height:1.05;margin:0;text-transform:uppercase;letter-spacing:1px}
 .acento{color:#65b5ff}
-.panel{background:rgba(27,36,53,.96);border:1px solid var(--borde);border-radius:20px;padding:25px;box-shadow:0 16px 45px rgba(0,0,0,.25)}
+
+.panel{
+  background:rgba(27,36,53,.96);
+  border:1px solid var(--borde);
+  border-radius:20px;
+  padding:25px;
+  box-shadow:0 16px 45px rgba(0,0,0,.25);
+}
+
 .pantalla{display:none}
 .pantalla.activa{display:block}
 h2{margin-top:0;font-size:25px}
 p{color:var(--suave);line-height:1.55}
+
 .idiomas{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:25px}
-button{font:inherit;cursor:pointer;border:0;border-radius:12px;padding:15px 17px;font-weight:bold;transition:.15s}
+
+button{
+  font:inherit;
+  cursor:pointer;
+  border:0;
+  border-radius:12px;
+  padding:15px 17px;
+  font-weight:bold;
+  transition:.15s;
+}
+
 button:active{transform:scale(.98)}
 .idioma-azul{background:var(--azul);color:white}
 .idioma-branco{background:white;color:var(--azul);border:2px solid var(--azul)}
 .botao-principal{width:100%;background:var(--azul);color:white;margin-top:15px}
 .botao-principal:hover,.idioma-azul:hover{background:#104d80}
 .botao-secundario{width:100%;background:white;color:var(--azul);margin-top:10px}
-input{width:100%;background:#101827;color:white;border:1px solid #52617a;border-radius:10px;padding:15px;font-size:16px;margin-top:8px;outline:none}
+
+.boton-bases{
+  display:block;
+  width:100%;
+  margin-top:15px;
+  padding:15px 17px;
+  border-radius:12px;
+  background:#253248;
+  border:1px solid #40516c;
+  color:white;
+  text-align:center;
+  text-decoration:none;
+  font-weight:bold;
+}
+
+.boton-bases:hover{background:#304563}
+
+input{
+  width:100%;
+  background:#101827;
+  color:white;
+  border:1px solid #52617a;
+  border-radius:10px;
+  padding:15px;
+  font-size:16px;
+  margin-top:8px;
+  outline:none;
+}
+
 input:focus{border-color:#65b5ff}
 label{display:block;color:var(--suave);margin-top:20px;font-size:14px}
 .info{display:flex;justify-content:space-between;gap:10px;margin-bottom:18px;flex-wrap:wrap}
@@ -104,10 +155,17 @@ label{display:block;color:var(--suave);margin-top:20px;font-size:14px}
   <div class="panel centrado">
     <h2>Escolle o teu idioma</h2>
     <p>Elixe o idioma no que queres participar.</p>
+
     <div class="idiomas">
       <button class="idioma-azul" onclick="escollerIdioma('gl')">GALEGO</button>
       <button class="idioma-branco" onclick="escollerIdioma('es')">CASTELLANO</button>
     </div>
+
+    <!-- BOTÓN BASES DEL JUEGO -->
+    <a href="bases.html" target="_blank" rel="noopener" class="boton-bases">
+      BASES DEL JUEGO
+    </a>
+
   </div>
 </section>
 
@@ -193,10 +251,10 @@ function iniciarMusica() {
 
   musica.volume = 0.5;
 
-  const reproducion = musica.play();
+  const reproduccion = musica.play();
 
-  if (reproducion !== undefined) {
-    reproducion.catch(() => {
+  if (reproduccion !== undefined) {
+    reproduccion.catch(() => {
       console.log("El navegador necesita una interacción para reproducir la música.");
     });
   }
@@ -242,6 +300,7 @@ const textos = {
     erroConexion:"Non se puido conectar coa clasificación. Inténtao de novo.",
     preguntaNumero:"PREGUNTA"
   },
+
   es: {
     benvida:"¡Bienvenido/a al Reto da Momada!",
     explicacion:"Pon a prueba tus conocimientos sobre el Entroido de Aguasantas. Tienes 10 preguntas y cuatro posibles respuestas. ¡Responde lo mejor posible e intenta conseguir un puesto en el podio!",
@@ -343,7 +402,7 @@ const preguntas = [
     gl:"Que actividade relacionada co galo foi recuperada en 2025?",
     es:"¿Qué actividad relacionada con el gallo fue recuperada en 2025?",
     opcionesGl:["A Corrida do Galo infantil","O desfile dos madamitos","A danza dos lanceiros","O concurso de máscaras"],
-    opcionesEs:["La Corrida del Gallo infantil","El desfile de los madamitos","La danza de los lanceiros","El concurso de máscaras"],
+    opcionesEs:["La Corrida do Galo infantil","El desfile de los madamitos","La danza de los lanceiros","El concurso de máscaras"],
     correcta:0
   }
 ];
@@ -362,7 +421,6 @@ function mezclarArray(array) {
 
 function escollerIdioma(valor) {
   iniciarMusica();
-
   idioma = valor;
   document.documentElement.lang = valor;
   actualizarTextos();
@@ -398,12 +456,14 @@ function mostrarPantalla(id) {
   document.querySelectorAll(".pantalla").forEach(p => {
     p.classList.remove("activa");
   });
+
   document.getElementById(id).classList.add("activa");
 }
 
 function formatarTempo(valor) {
   const minutos = Math.floor(valor / 60);
   const segundosRestantes = valor % 60;
+
   return String(minutos).padStart(2,"0") + ":" +
     String(segundosRestantes).padStart(2,"0");
 }
@@ -495,6 +555,7 @@ function responder(botonElixido) {
 
   botones.forEach(boton => {
     boton.disabled = true;
+
     if (boton.dataset.correcta === "true") {
       boton.classList.add("correcta");
     }
@@ -640,5 +701,6 @@ function xogarOutraVez() {
 
 actualizarTextos();
 </script>
+
 </body>
 </html>
