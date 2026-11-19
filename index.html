@@ -78,6 +78,7 @@ label{display:block;color:var(--suave);margin-top:20px;font-size:14px}
 .nota{text-align:center;color:#65b5ff;font-size:14px;font-weight:bold;margin-top:20px;line-height:1.5}
 .separador{height:1px;background:var(--borde);margin:22px 0}
 .centrado{text-align:center}
+
 @media(max-width:480px){
   body{padding:12px 10px}
   .panel{padding:19px}
@@ -88,6 +89,10 @@ label{display:block;color:var(--suave);margin-top:20px;font-size:14px}
 </head>
 
 <body>
+
+<!-- MÚSICA DE FONDO -->
+<audio id="musicaFondo" src="audio/pista.m4a" loop preload="auto"></audio>
+
 <div class="container">
 
 <header>
@@ -179,6 +184,31 @@ let aciertos = 0;
 let segundos = 0;
 let intervalo = null;
 let respostaSeleccionada = false;
+
+/* ACTIVAR LA MÚSICA */
+function iniciarMusica() {
+  const musica = document.getElementById("musicaFondo");
+
+  if (!musica || !musica.paused) return;
+
+  musica.volume = 0.5;
+
+  const reproducion = musica.play();
+
+  if (reproducion !== undefined) {
+    reproducion.catch(() => {
+      console.log("El navegador necesita una interacción para reproducir la música.");
+    });
+  }
+}
+
+/* INTENTAR REPRODUCIR AL ENTRAR */
+iniciarMusica();
+
+/* SI EL NAVEGADOR BLOQUEA EL AUTOPLAY, ACTIVAR AL PRIMER TOQUE */
+document.addEventListener("pointerdown", iniciarMusica, { once: true });
+document.addEventListener("touchstart", iniciarMusica, { once: true });
+document.addEventListener("keydown", iniciarMusica, { once: true });
 
 const textos = {
   gl: {
@@ -313,7 +343,7 @@ const preguntas = [
     gl:"Que actividade relacionada co galo foi recuperada en 2025?",
     es:"¿Qué actividad relacionada con el gallo fue recuperada en 2025?",
     opcionesGl:["A Corrida do Galo infantil","O desfile dos madamitos","A danza dos lanceiros","O concurso de máscaras"],
-    opcionesEs:["La Corrida do Galo infantil","El desfile de los madamitos","La danza de los lanceiros","El concurso de máscaras"],
+    opcionesEs:["La Corrida del Gallo infantil","El desfile de los madamitos","La danza de los lanceiros","El concurso de máscaras"],
     correcta:0
   }
 ];
@@ -331,6 +361,8 @@ function mezclarArray(array) {
 }
 
 function escollerIdioma(valor) {
+  iniciarMusica();
+
   idioma = valor;
   document.documentElement.lang = valor;
   actualizarTextos();
@@ -378,6 +410,8 @@ function formatarTempo(valor) {
 
 // COMENZAR: MEZCLAR LAS 10 PREGUNTAS
 function comezarConcurso() {
+  iniciarMusica();
+
   const nome = document.getElementById("nomeParticipante").value.trim();
 
   if (!nome) {
@@ -390,7 +424,6 @@ function comezarConcurso() {
   aciertos = 0;
   segundos = 0;
 
-  // Cada partida tendrá un orden diferente de preguntas
   preguntasMezcladas = mezclarArray(preguntas);
 
   clearInterval(intervalo);
@@ -411,7 +444,6 @@ function comezarConcurso() {
 function cargarPregunta() {
   respostaSeleccionada = false;
 
-  // Usar el orden aleatorio de preguntas de esta partida
   const p = preguntasMezcladas[preguntaActual];
   const t = textos[idioma];
 
@@ -433,13 +465,11 @@ function cargarPregunta() {
 
   const opciones = idioma === "gl" ? p.opcionesGl : p.opcionesEs;
 
-  // Asociar cada respuesta con su condición de correcta
   const respuestasMezcladas = opciones.map((texto, indice) => ({
     texto,
     esCorrecta: indice === p.correcta
   }));
 
-  // Mezclar las cuatro respuestas
   const opcionesAleatorias = mezclarArray(respuestasMezcladas);
 
   opcionesAleatorias.forEach((respuesta, indice) => {
